@@ -13,6 +13,8 @@ Tkassa uses the Eventor REST API to:
     - then, for each club member result, check if the member was pre-registered and if so calculate the fee, or, if not, check the event class and use those fees instead.
 - finally, present a list of each active club member and a sub-list of all billable events for the time period.
 
+The output is in tab-separated format and can be piped to a csv file, which can then be imported to Excel or similar.
+
 ## Pre-requisites
 
 You will need an API key for Eventor to run this tool. There is a specific key for each club, and you will need to use the one for your club. The API key can be obtained from Eventor support, but please check if someone in your club maybe already asked them for the key.
@@ -25,11 +27,15 @@ Tkassa is written in Rust. Follow [these instructions](https://www.rust-lang.org
 
     cargo build --release
 
-Then, the tkassa binary will be at `target/release/tkassa`.
+Then, the tkassa binary will be at `target/release/tkassa`. A typical invocation (excluding the API key, see above) may look like:
+
+    target/release/tkassa -q -i 42705,42490,24475,37349,40629 -o 224 APIKEY 2022-01-01 2022-11-08 
+
+Replace `APIKEY` with your API key. Here a few events are ignored, mainly O-ringen (because O-ringen takes a long time to load and the fees are currently not paid over Eventor). The organisation ID is 224.
 
 ## Caches
 
-When you run tkassa, there may be up to a thousand different queries to Eventor. In case there is a problem or you want to run the tool again, tkassa stores the result of each query in an XML file and the query results can in general be used again without accessing Eventor. You can specify where to put these files with the `-c` option.
+When you run tkassa, there may be several thousand different queries to Eventor. In case there is a problem or you want to run the tool again, tkassa stores the result of each query in an XML file and the query results can in general be used again without accessing Eventor. You can specify where to put these files with the `-c` option. Default is `caches` in the `tkassa` folder.
 
 On a related note, do not run the tool repeatedly with different cache settings, and maybe don't run it on Sunday evenings when Eventor is otherwise very busy.
 
