@@ -59,7 +59,7 @@ impl DataExtractor {
                     Err(Some("Starting date is too short.".to_string()))
                 } else {
                     let verbose = !matches.opt_present("q");
-                    let cache_folder = matches.opt_str("c").unwrap_or(".".to_string());
+                    let cache_folder = matches.opt_str("c").unwrap_or("caches".to_string());
                     let organisation_id = matches
                         .opt_str("o")
                         .map(|v| v.parse::<u64>().ok())
