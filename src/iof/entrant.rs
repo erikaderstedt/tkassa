@@ -1,7 +1,7 @@
-use xmltree::Element;
-use std::convert::TryFrom;
-use crate::iof::{numeric_contents,IOFXMLError};
 use crate::iof::Entrant;
+use crate::iof::{numeric_contents, IOFXMLError};
+use std::convert::TryFrom;
+use xmltree::Element;
 
 impl TryFrom<&Element> for Entrant {
     type Error = IOFXMLError;

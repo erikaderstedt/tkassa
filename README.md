@@ -21,7 +21,7 @@ You will also need to know your club ID number. This is listed as "Organisation 
 
 ## Installation
 
-Tkassa is written in Rust. Follow [[these instructions]](https://www.rust-lang.org/tools/install) to install Rust. Then, check out the git repository, change to that folder, and build with
+Tkassa is written in Rust. Follow [these instructions](https://www.rust-lang.org/tools/install) to install Rust. Then, check out the git repository, change to that folder, and build with
 
     cargo build --release
 
@@ -29,7 +29,11 @@ Then, the tkassa binary will be at `target/release/tkassa`.
 
 ## Caches
 
-When you run tkassa, there may be up to a thousand different queries to Eventor. In case there is a problem or you want to run the tool again, tkassa stores the result of each query in an XML file. You can specify where to put these files with the `-c` option.
+When you run tkassa, there may be up to a thousand different queries to Eventor. In case there is a problem or you want to run the tool again, tkassa stores the result of each query in an XML file and the query results can in general be used again without accessing Eventor. You can specify where to put these files with the `-c` option.
+
+On a related note, do not run the tool repeatedly with different cache settings, and maybe don't run it on Sunday evenings when Eventor is otherwise very busy.
+
+Running the tool will take a lot of time (up to an hour), but when all the queries are cached it should complete in a couple of seconds.
 
 ## Known issues
 

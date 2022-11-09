@@ -1,8 +1,8 @@
-use std::{path::Path, hash::Hash, hash::Hasher, fs::read_to_string};
-use serde::Serialize;
-use std::io::ErrorKind;
 use reqwest::{blocking::Client, IntoUrl};
+use serde::Serialize;
 use std::collections::hash_map::DefaultHasher;
+use std::io::ErrorKind;
+use std::{fs::read_to_string, hash::Hash, hash::Hasher, path::Path};
 
 pub struct EventorClient<'a> {
     api_key: &'a str,
@@ -12,26 +12,30 @@ pub struct EventorClient<'a> {
 }
 
 impl<'a> EventorClient<'a> {
-
     pub fn new(api_key: &'a str, cache_folder: &'a str, verbose: bool) -> EventorClient {
-        EventorClient { 
-            api_key, 
-            verbose, 
+        EventorClient {
+            api_key,
+            verbose,
             cache_folder: Path::new(cache_folder),
-            client: Client::new()
+            client: Client::new(),
         }
     }
 
-    pub fn request<T: Serialize + ?Sized, U: IntoUrl>(&self, url: U, parameters: &T) -> xmltree::Element {
-
+    pub fn request<T: Serialize + ?Sized, U: IntoUrl>(
+        &self,
+        url: U,
+        parameters: &T,
+    ) -> xmltree::Element {
         if self.verbose {
             println!("Eventor request: {}", url.as_str());
         }
 
-        let request = self.client.get(url)
+        let request = self
+            .client
+            .get(url)
             .header("ApiKey", self.api_key)
             .query(parameters);
-            
+
         let mut hasher = DefaultHasher::new();
         format!("{:?}", request).hash(&mut hasher);
         let request_hash = hasher.finish();
@@ -45,25 +49,28 @@ impl<'a> EventorClient<'a> {
             read_to_string(cache_path)
         } else {
             if self.verbose {
-                println!("\tPerforming request to Eventor. Will save to cache at {:?}.", cache_path);
+                println!(
+                    "\tPerforming request to Eventor. Will save to cache at {:?}.",
+                    cache_path
+                );
             }
             request
                 .send()
                 .expect("Unable to construct request to Eventor server.")
                 .text()
-                .and_then(|s: String| -> Result<String,reqwest::Error> {
+                .and_then(|s: String| -> Result<String, reqwest::Error> {
                     if let Err(_) = std::fs::write(cache_path, s.clone()) {
                         println!("\tUnable to save request data.");
                     }
-                    Ok(s)                
+                    Ok(s)
                 })
                 .map_err(|error: reqwest::Error| -> std::io::Error {
                     std::io::Error::new(ErrorKind::Other, error.to_string())
                 })
         };
 
-        result.map(|s| xmltree::Element::parse(s.as_bytes())
-            .expect("Invalid XML from Eventor."))
+        result
+            .map(|s| xmltree::Element::parse(s.as_bytes()).expect("Invalid XML from Eventor."))
             .expect("Unable to load XML.")
     }
 }

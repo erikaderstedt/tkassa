@@ -1,6 +1,6 @@
-use xmltree::Element;
+use crate::iof::{numeric_contents, subelements, ClassResult, IOFXMLError};
 use std::convert::TryFrom;
-use crate::iof::{numeric_contents,subelements,IOFXMLError,ClassResult};
+use xmltree::Element;
 
 impl TryFrom<&Element> for ClassResult {
     type Error = IOFXMLError;
@@ -19,6 +19,10 @@ impl TryFrom<&Element> for ClassResult {
 
         let person_results = subelements(element, "PersonResult")?;
 
-        Ok( ClassResult { event_class_id, event_race_id, person_results })
+        Ok(ClassResult {
+            event_class_id,
+            event_race_id,
+            person_results,
+        })
     }
 }

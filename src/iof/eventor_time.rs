@@ -1,6 +1,6 @@
-use xmltree::Element;
+use crate::iof::{textual_contents, EventorTime, IOFXMLError};
 use std::convert::TryFrom;
-use crate::iof::{textual_contents,IOFXMLError,EventorTime};
+use xmltree::Element;
 
 impl TryFrom<&Element> for EventorTime {
     type Error = IOFXMLError;
@@ -11,6 +11,6 @@ impl TryFrom<&Element> for EventorTime {
             .replace("-", "")
             .parse::<u64>()
             .map_err(|_| "Bad date in eventor timestamp object")?;
-        Ok( EventorTime { date } )
+        Ok(EventorTime { date })
     }
 }

@@ -1,6 +1,6 @@
-use xmltree::Element;
+use crate::iof::{Competitor, IOFXMLError, PersonResult};
 use std::convert::TryFrom;
-use crate::iof::{IOFXMLError,Competitor,PersonResult};
+use xmltree::Element;
 
 impl TryFrom<&Element> for PersonResult {
     type Error = IOFXMLError;
@@ -19,12 +19,12 @@ impl TryFrom<&Element> for PersonResult {
             .ok_or("Missing result element from person result")?
             .get_child("CompetitorStatus")
             .ok_or("Missing competitor status from result")?;
-        
+
         let dns = match status.attributes.get("value") {
             Some(v) => v == "DidNotStart",
             _ => false,
         };
 
-        Ok( PersonResult { competitor, dns })
+        Ok(PersonResult { competitor, dns })
     }
 }

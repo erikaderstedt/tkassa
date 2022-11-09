@@ -1,7 +1,7 @@
-use xmltree::Element;
-use std::convert::TryFrom;
-use crate::iof::{numeric_contents,IOFXMLError};
 use crate::iof::Race;
+use crate::iof::{numeric_contents, EventorTime, IOFXMLError};
+use std::convert::TryFrom;
+use xmltree::Element;
 
 impl TryFrom<&Element> for Race {
     type Error = IOFXMLError;
@@ -14,7 +14,6 @@ impl TryFrom<&Element> for Race {
             .ok_or("Event race missing race date!")?
             .try_into()?;
 
-        Ok( Race { id, date } )
+        Ok(Race { id, date })
     }
 }
-

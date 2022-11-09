@@ -1,18 +1,18 @@
-use xmltree::Element;
 use std::convert::TryFrom;
 
 pub type IOFXMLError = &'static str;
 
-mod competitor;
 mod class_entry_fee;
-mod event_class;
-mod entry;
-mod person_result;
 mod class_result;
-mod entry_fee;
-mod eventor_time;
-mod event;
+mod competitor;
 mod entrant;
+mod entry;
+mod entry_fee;
+mod event;
+mod event_class;
+mod eventor_time;
+mod person_result;
+mod race;
 
 #[derive(Debug)]
 struct Race {
@@ -73,7 +73,7 @@ pub struct Entry {
     fee_ids: Vec<u64>,
 }
 
-#[derive(Debug,Clone,Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct EventorTime {
     pub date: u64,
 }
@@ -81,7 +81,7 @@ pub struct EventorTime {
 #[derive(Debug)]
 enum ValueOperator {
     Fixed,
-    Percent
+    Percent,
 }
 
 #[derive(Debug)]
@@ -91,9 +91,8 @@ pub struct EntryFee {
     amount: f64,
     operator: ValueOperator,
     from_year_of_birth: Option<u64>,
-    to_year_of_birth: Option<u64>
+    to_year_of_birth: Option<u64>,
 }
-
 
 fn textual_contents(element: &xmltree::Element, child_name: &str) -> Option<String> {
     element
@@ -111,36 +110,27 @@ pub fn year_from_date_string(date_string: &String) -> Option<u64> {
     }
 }
 
-fn numeric_contents<T: std::str::FromStr>(element: &xmltree::Element, child_name: &str) -> Option<T> {
-    textual_contents(element, child_name)?
-        .parse::<T>()
-        .ok()
+fn numeric_contents<T: std::str::FromStr>(
+    element: &xmltree::Element,
+    child_name: &str,
+) -> Option<T> {
+    textual_contents(element, child_name)?.parse::<T>().ok()
 }
 
-pub fn subelements<'a, T: TryFrom<&'a xmltree::Element, Error = IOFXMLError>>(element: &'a xmltree::Element, child_name: &str) -> Result<Vec<T>, IOFXMLError> {
-    element.children
-            .iter()
-            .filter_map(|node| -> Option<Result<T, IOFXMLError>> { 
-                match node { 
-                    xmltree::XMLNode::Element(element) if element.name == child_name => Some(element.try_into()), 
-                    _ => None
+pub fn subelements<'a, T: TryFrom<&'a xmltree::Element, Error = IOFXMLError>>(
+    element: &'a xmltree::Element,
+    child_name: &str,
+) -> Result<Vec<T>, IOFXMLError> {
+    element
+        .children
+        .iter()
+        .filter_map(|node| -> Option<Result<T, IOFXMLError>> {
+            match node {
+                xmltree::XMLNode::Element(element) if element.name == child_name => {
+                    Some(element.try_into())
                 }
-            }) 
-            .collect::<Result<Vec<T>, IOFXMLError>>()
+                _ => None,
+            }
+        })
+        .collect::<Result<Vec<T>, IOFXMLError>>()
 }
-
-impl TryFrom<&Element> for Race {
-    type Error = IOFXMLError;
-
-    fn try_from(element: &Element) -> Result<Self, Self::Error> {
-        let id: u64 = numeric_contents(element, "EventRaceId")
-            .ok_or("Event race id missing or malformed!")?;
-        let date: EventorTime = element
-            .get_child("RaceDate")
-            .ok_or("Event race missing race date!")?
-            .try_into()?;
-
-        Ok( Race { id, date } )
-    }
-}
-

@@ -1,6 +1,6 @@
-use xmltree::Element;
+use crate::iof::{numeric_contents, ClassEntryFee, IOFXMLError};
 use std::convert::TryFrom;
-use crate::iof::{numeric_contents,IOFXMLError,ClassEntryFee};
+use xmltree::Element;
 
 impl TryFrom<&Element> for ClassEntryFee {
     type Error = IOFXMLError;
@@ -11,6 +11,6 @@ impl TryFrom<&Element> for ClassEntryFee {
         let sequence: u64 = numeric_contents(element, "Sequence")
             .ok_or("Sequence number missing or malformed for class entry fee!")?;
 
-        Ok( ClassEntryFee { id, sequence } )
+        Ok(ClassEntryFee { id, sequence })
     }
 }
