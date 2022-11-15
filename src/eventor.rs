@@ -12,7 +12,7 @@ pub struct EventorClient<'a> {
 }
 
 impl<'a> EventorClient<'a> {
-    pub fn new(api_key: &'a str, cache_folder: &'a str, verbose: bool) -> EventorClient {
+    pub fn new(api_key: &'a str, cache_folder: &'a str, verbose: bool) -> EventorClient<'a> {
         EventorClient {
             api_key,
             verbose,
