@@ -22,6 +22,7 @@ fn print_usage(opts: Options) {
 struct BillableEvent {
     race_date: u64,
     event_name: String,
+    class_name: String,
     normal_fee: f64,
     late_fee: f64,
     dns: bool
@@ -42,6 +43,7 @@ struct DataExtractor {
     current_year: u64,
     from_date: String,
     to_date: String,
+    include_class_names: bool,
 }
 
 impl DataExtractor {
@@ -68,6 +70,7 @@ impl DataExtractor {
                     let api_key = (&matches.free[0]).to_string();
                     let from_date = (&matches.free[1]).to_string();
                     let to_date = (&matches.free[2]).to_string();
+                    let include_class_names = matches.opt_present("n");
                     let ignore_events: Vec<u64> = matches
                         .opt_str("i")
                         .unwrap_or("".to_string())
@@ -79,7 +82,8 @@ impl DataExtractor {
                         Some(current_year) => Ok( DataExtractor {
                             verbose, organisation_id, api_key,
                             cache_folder, ignore_events,
-                            current_year, from_date, to_date
+                            current_year, from_date, to_date,
+                            include_class_names
                         }),
                     }
                 }
@@ -186,7 +190,8 @@ impl DataExtractor {
                     existing_person.billable.push(
                         BillableEvent { 
                             race_date: race_date.date , 
-                            event_name: event.name.clone(), 
+                            event_name: event.name.clone(),
+                            class_name: event_class.map_or("?".to_string(), |c| c.name.clone()),
                             normal_fee: paid.0, 
                             late_fee: paid.1, 
                             dns: person_result.dns 
@@ -211,8 +216,13 @@ impl DataExtractor {
             println!("{}\t{}\t{}\t{}", id, p.person.given, p.person.family, byear);
             p.billable.sort_by_key(|b| b.race_date);
             for b in p.billable.iter() {
-                println!("\t{}\t{}\t{}\t{}\t{}",
+                if self.include_class_names {
+                    println!("\t{}\t{}\t{}\t{}\t{}\t{}",
+                    b.race_date, b.event_name, b.class_name, b.normal_fee as u64, b.late_fee as u64, if b.dns { "DNS" } else { "" })
+                } else {
+                    println!("\t{}\t{}\t{}\t{}\t{}",
                     b.race_date, b.event_name, b.normal_fee as u64, b.late_fee as u64, if b.dns { "DNS" } else { "" })
+                }
             }
         }
     }
@@ -222,6 +232,7 @@ fn main() {
     let mut opts = Options::new();
 
     opts.optflag("q", "quiet", "hide additional information while running");
+    opts.optflag("n", "class_name", "include class name for each billable event");
     opts.optopt("i", "ignore", "comma-separated list of event IDs to ignore", "34567,35112");
     opts.optopt("c", "cache", "cache folder for requests", "caches/");
     opts.optopt("o", "org_id", "organisation id", "224");

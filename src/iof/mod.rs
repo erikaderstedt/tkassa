@@ -37,6 +37,7 @@ pub struct ClassEntryFee {
 #[derive(Debug)]
 pub struct EventClass {
     pub id: u64,
+    pub name: String,
     pub fee_ids: Vec<u64>,
 }
 

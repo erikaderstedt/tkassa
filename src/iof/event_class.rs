@@ -1,4 +1,4 @@
-use crate::iof::{numeric_contents, subelements, ClassEntryFee, EntryFee, EventClass, IOFXMLError};
+use crate::iof::{numeric_contents, textual_contents, subelements, ClassEntryFee, EntryFee, EventClass, IOFXMLError};
 use std::convert::TryFrom;
 use xmltree::Element;
 
@@ -8,12 +8,15 @@ impl TryFrom<&Element> for EventClass {
     fn try_from(element: &Element) -> Result<Self, Self::Error> {
         let id: u64 = numeric_contents(element, "EventClassId")
             .ok_or("Event class id missing or malformed!")?;
+        let name = textual_contents(element, "ClassShortName")
+            .ok_or("Missing short class name")?;
 
         let mut fees: Vec<ClassEntryFee> = subelements(element, "ClassEntryFee")?;
         fees.sort_by(|a, b| a.sequence.cmp(&b.sequence));
 
         Ok(EventClass {
             id,
+            name,
             fee_ids: fees.into_iter().map(|f| f.id).collect(),
         })
     }
