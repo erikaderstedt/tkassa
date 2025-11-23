@@ -44,6 +44,7 @@ struct DataExtractor {
     from_date: String,
     to_date: String,
     include_class_names: bool,
+    show_only_starts: bool,
 }
 
 impl DataExtractor {
@@ -61,6 +62,7 @@ impl DataExtractor {
                     Err(Some("Starting date is too short.".to_string()))
                 } else {
                     let verbose = !matches.opt_present("q");
+                    let show_only_starts = matches.opt_present("s");
                     let cache_folder = matches.opt_str("c").unwrap_or("caches".to_string());
                     let organisation_id = matches
                         .opt_str("o")
@@ -83,13 +85,62 @@ impl DataExtractor {
                             verbose, organisation_id, api_key,
                             cache_folder, ignore_events,
                             current_year, from_date, to_date,
-                            include_class_names
+                            include_class_names, show_only_starts
                         }),
                     }
                 }
             },
             Err(f) => { return Err(Some(format!("Unable to parse command-line options: {:?}", f.to_string()))) }
         }
+    }
+
+    fn get_number_of_starts(&self) -> usize {
+        let eventor_client = eventor::EventorClient::new(&self.api_key, &self.cache_folder, self.verbose); 
+            
+        let event_list = eventor_client.request(EVENTS, 
+            &[("fromDate", self.from_date.as_str()), 
+                        ("toDate", self.to_date.as_str())]);
+
+        let mut events: Vec<iof::Event> = subelements(&event_list, "Event")
+            .expect("XML parsing error when reading event list");
+
+
+        events.sort_by_key(|e| e.first_race_date());
+        let mut total_number_of_starts = 0;
+
+        for event in events.iter_mut() {
+            if self.ignore_events.contains(&event.id) {
+                continue;
+            }
+
+            let result_list = eventor_client.request(ORGANISATION_RESULTS, 
+                &[("organisationIds", &self.organisation_id.to_string()), 
+                            ("eventId", &event.id.to_string())]);
+
+            // First we just check that it contains any ClassResult. If not, then noone from our club was at
+            // the event (and were not pre-entered either).
+            if result_list.get_child("ClassResult").is_none() {
+                continue
+            }
+
+            let class_results: Vec<iof::ClassResult> = subelements(&result_list, "ClassResult")
+            .expect("XML parsing error when reading result list");
+            let mut num_starts_at_this_event = 0;
+
+            for class in class_results.iter() {
+                for person_result in class.person_results.iter() {
+                    if !person_result.dns {
+                        num_starts_at_this_event += 1;
+                    }
+                }
+            }
+            // if self.verbose {
+                println!("{}: {} starts", event.name, num_starts_at_this_event);
+            // }
+            total_number_of_starts += num_starts_at_this_event;
+        }
+
+        total_number_of_starts
     }
 
     fn run(&self) {
@@ -233,6 +284,7 @@ fn main() {
 
     opts.optflag("q", "quiet", "hide additional information while running");
     opts.optflag("n", "class_name", "include class name for each billable event");
+    opts.optflag("s", "starts", "show only the number of starts made");
     opts.optopt("i", "ignore", "comma-separated list of event IDs to ignore", "34567,35112");
     opts.optopt("c", "cache", "cache folder for requests", "caches/");
     opts.optopt("o", "org_id", "organisation id", "224");
@@ -246,7 +298,11 @@ fn main() {
             print_usage(opts);
         },
         Ok(extractor) => {
-            extractor.run();
+            if extractor.show_only_starts {
+                println!("Total {} starts", extractor.get_number_of_starts());
+            } else {
+                extractor.run();
+            }
         }
     };
     
