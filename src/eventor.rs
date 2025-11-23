@@ -67,6 +67,13 @@ impl<'a> EventorClient<'a> {
                 .map_err(|error: reqwest::Error| -> std::io::Error {
                     std::io::Error::new(ErrorKind::Other, error.to_string())
                 })
+                .and_then(|s: String| -> Result<String, std::io::Error> {
+                    if s.contains("Internal server error") {
+                        Err(std::io::Error::new(ErrorKind::Other, "XML file from Eventor contains 'Internal server error'".to_string()))
+                    } else {
+                        Ok(s)
+                    }
+                })
         };
 
         result
