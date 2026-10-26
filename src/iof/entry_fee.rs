@@ -18,7 +18,7 @@ impl TryFrom<&Element> for EntryFee {
                 "percent" => Ok(ValueOperator::Percent),
                 _ => Err("Unrecognized value operator for entry fee."),
             },
-            None => Err("No value operator specified for entry fee."),
+            None => Ok(ValueOperator::Fixed),
         }?;
 
         let from_year_of_birth: Option<u64> =

@@ -115,7 +115,10 @@ fn numeric_contents<T: std::str::FromStr>(
     element: &xmltree::Element,
     child_name: &str,
 ) -> Option<T> {
-    textual_contents(element, child_name)?.parse::<T>().ok()
+    textual_contents(element, child_name)?
+        .replace(",", ".")
+        .parse::<T>()
+        .ok()
 }
 
 pub fn subelements<'a, T: TryFrom<&'a xmltree::Element, Error = IOFXMLError>>(
